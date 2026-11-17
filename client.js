@@ -66,6 +66,8 @@ window.__ModuleLoader__.load({
 .ic-btn:focus-visible { outline: 2px solid color-mix(in srgb, var(--ic-link) 70%, transparent); outline-offset: 2px; }
 .ic-btn svg { flex: none; }
 .ic-btn.is-icon { width: 32px; padding: 0; }
+.ic-btn[aria-pressed="true"] { background: color-mix(in srgb, var(--ic-link) 12%, var(--ic-card)); border-color: color-mix(in srgb, var(--ic-link) 42%, var(--ic-line)); color: var(--ic-link); }
+.ic-btn[aria-pressed="true"]:hover:not(:disabled) { background: color-mix(in srgb, var(--ic-link) 17%, var(--ic-card)); border-color: color-mix(in srgb, var(--ic-link) 55%, var(--ic-line)); }
 
 .ic-seg { display: inline-flex; padding: 2px; gap: 2px; border-radius: 10px; background: var(--ic-card); border: 1px solid var(--ic-line); }
 .ic-seg button {
@@ -113,8 +115,12 @@ window.__ModuleLoader__.load({
   background: rgba(255,255,255,.97); color: #12151b;
   font-size: 11px; font-weight: 700; letter-spacing: -.01em;
   box-shadow: 0 2px 5px rgba(0,0,0,.16), 0 10px 28px -8px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.05);
-  transition: transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease;
+  transition: transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease, width .18s ease, height .18s ease;
 }
+.ic-knob.is-compact { width: 34px; height: 34px; }
+.ic-knob.is-compact::before { left: -11px; }
+.ic-knob.is-compact::after { right: -11px; }
+.ic-pct { font-variant-numeric: tabular-nums; }
 .ic-stage:hover .ic-knob { transform: translate(-50%, -50%) scale(1.07); box-shadow: 0 3px 7px rgba(0,0,0,.18), 0 14px 34px -8px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.05); }
 .ic-stage:active .ic-knob { transform: translate(-50%, -50%) scale(.98); }
 .ic-knob::before, .ic-knob::after { content: ""; position: absolute; top: 50%; width: 7px; height: 7px; border-top: 1.6px solid #12151b; border-left: 1.6px solid #12151b; opacity: .5; }
@@ -208,6 +214,16 @@ window.__ModuleLoader__.load({
       h('path', { d: 'M4.6 13a8 8 0 1 0 2-7.4L4 10' }))
     }
 
+    function IconPercent({ size = 16 }) {
+      return h('svg', {
+        width: size, height: size, viewBox: '0 0 24 24', fill: 'none',
+        stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true,
+      },
+      h('path', { d: 'M19 5 5 19' }),
+      h('circle', { cx: 7.5, cy: 7.5, r: 2.2 }),
+      h('circle', { cx: 16.5, cy: 16.5, r: 2.2 }))
+    }
+
     function IconX({ size = 14 }) {
       return h('svg', {
         width: size, height: size, viewBox: '0 0 24 24', fill: 'none',
@@ -235,7 +251,7 @@ window.__ModuleLoader__.load({
       return (bytes / 1024 / 1024).toFixed(1) + ' MB'
     }
 
-    function ToolButton({ children, onClick, title, disabled, icon, className }) {
+    function ToolButton({ children, onClick, title, disabled, icon, className, pressed }) {
       return h('button', {
         type: 'button',
         className: 'ic-btn' + (icon && !children ? ' is-icon' : '') + (className ? ' ' + className : ''),
@@ -243,6 +259,7 @@ window.__ModuleLoader__.load({
         title,
         disabled: disabled || undefined,
         'aria-label': title,
+        'aria-pressed': pressed === undefined ? undefined : String(pressed),
       }, icon || null, children || null)
     }
 
@@ -299,12 +316,13 @@ window.__ModuleLoader__.load({
         h('small', null, '点击选择，或把图片拖进来')))
     }
 
-    function CompareStage({ left, right, fit, resetNonce }) {
+    function CompareStage({ left, right, fit, resetNonce, showPercent }) {
       const stageRef = React.useRef(null)
       const topRef = React.useRef(null)
       const lineRef = React.useRef(null)
       const pctRef = React.useRef(null)
       const targetRef = React.useRef(0.5)
+      const valueRef = React.useRef(0.5)
       const [dragging, setDragging] = React.useState(false)
 
       React.useEffect(() => {
@@ -313,11 +331,16 @@ window.__ModuleLoader__.load({
       }, [resetNonce])
 
       React.useEffect(() => {
+        if (pctRef.current) pctRef.current.textContent = Math.round(valueRef.current * 100) + '%'
+      }, [showPercent])
+
+      React.useEffect(() => {
         let frame = 0
         let current = 0.5
         let painted = -1
         const paint = (value) => {
           const pct = value * 100
+          valueRef.current = value
           if (topRef.current) topRef.current.style.clipPath = 'inset(0 0 0 ' + pct.toFixed(3) + '%)'
           if (lineRef.current) lineRef.current.style.left = pct.toFixed(3) + '%'
           if (pctRef.current) pctRef.current.textContent = Math.round(pct) + '%'
@@ -415,14 +438,22 @@ window.__ModuleLoader__.load({
         h('div', { className: 'ic-chip ic-chip-a' }, h('b', null, 'A'), h('span', null, left.name)),
         h('div', { className: 'ic-chip ic-chip-b' }, h('b', null, 'B'), h('span', null, right.name)),
         h('div', { ref: lineRef, className: 'ic-divider' },
-          h('div', { className: 'ic-knob' }, h('span', { ref: pctRef }, '50%')))))
+          h('div', { className: 'ic-knob' + (showPercent ? '' : ' is-compact') },
+            showPercent ? h('span', { ref: pctRef, className: 'ic-pct' }, '50%') : null))))
     }
 
     function ComparePage() {
       const [left, setLeft] = React.useState(null)
       const [right, setRight] = React.useState(null)
       const [fit, setFit] = React.useState('contain')
+      const [showPercent, setShowPercent] = React.useState(() => {
+        try { return localStorage.getItem('dsh-image-compare:show-percent') === '1' } catch { return false }
+      })
       const [resetNonce, setResetNonce] = React.useState(0)
+
+      React.useEffect(() => {
+        try { localStorage.setItem('dsh-image-compare:show-percent', showPercent ? '1' : '0') } catch {}
+      }, [showPercent])
       const leftRef = React.useRef(null)
       const rightRef = React.useRef(null)
       const urlsRef = React.useRef(new Set())
@@ -551,13 +582,19 @@ window.__ModuleLoader__.load({
                 title: '填满画布（可能裁切边缘）',
               }, '填充')),
             h(ToolButton, {
+              onClick: () => setShowPercent((value) => !value),
+              title: showPercent ? '隐藏分割线百分比' : '显示分割线百分比',
+              icon: h(IconPercent, null),
+              pressed: showPercent,
+            }, '百分比'),
+            h(ToolButton, {
               onClick: () => setResetNonce((value) => value + 1),
               disabled: !both,
               title: '把分割线复位到中间',
               icon: h(IconReset, null),
             })),
         both
-          ? h(CompareStage, { left, right, fit, resetNonce })
+          ? h(CompareStage, { left, right, fit, resetNonce, showPercent })
           : h('div', { className: 'ic-empty' },
             h('div', { className: 'ic-empty-intro' },
               h('h2', null, both ? '' : '选择两张图片，开始对比'),

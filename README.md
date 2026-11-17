@@ -11,6 +11,7 @@ A left-sidebar image comparison panel for **DeepSeek Harness**. Load two images,
 - **Native left-sidebar entry** — registers through `sidebar.panellist` plus the matching `main` panel key. No iframe, no separate app.
 - **Load images three ways** — click a card, drag & drop, or paste from the clipboard with `Ctrl/⌘ + V`.
 - **Smooth pointer reveal** — the split follows the pointer and is eased with `requestAnimationFrame`, so hover and drag both feel fluid.
+- **Clean divider by default** — the handle stays uncluttered; toggle **百分比** in the toolbar if you want the live split percentage.
 - **Draggable divider** — grab the split line at any time; double-click the canvas to reset to 50%.
 - **Keyboard support** — `←` / `→` for 2% steps, `Shift` for 10%, `Home` / `End` for the extremes.
 - **Fit or fill** — toggle between `contain` and `cover` without reloading either image.
