@@ -117,9 +117,6 @@ window.__ModuleLoader__.load({
   box-shadow: 0 2px 5px rgba(0,0,0,.16), 0 10px 28px -8px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.05);
   transition: transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease, width .18s ease, height .18s ease;
 }
-.ic-knob.is-compact { width: 34px; height: 34px; }
-.ic-knob.is-compact::before { left: -11px; }
-.ic-knob.is-compact::after { right: -11px; }
 .ic-pct { font-variant-numeric: tabular-nums; }
 .ic-stage:hover .ic-knob { transform: translate(-50%, -50%) scale(1.07); box-shadow: 0 3px 7px rgba(0,0,0,.18), 0 14px 34px -8px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.05); }
 .ic-stage:active .ic-knob { transform: translate(-50%, -50%) scale(.98); }
@@ -438,8 +435,9 @@ window.__ModuleLoader__.load({
         h('div', { className: 'ic-chip ic-chip-a' }, h('b', null, 'A'), h('span', null, left.name)),
         h('div', { className: 'ic-chip ic-chip-b' }, h('b', null, 'B'), h('span', null, right.name)),
         h('div', { ref: lineRef, className: 'ic-divider' },
-          h('div', { className: 'ic-knob' + (showPercent ? '' : ' is-compact') },
-            showPercent ? h('span', { ref: pctRef, className: 'ic-pct' }, '50%') : null))))
+          showPercent
+            ? h('div', { className: 'ic-knob' }, h('span', { ref: pctRef, className: 'ic-pct' }, '50%'))
+            : null)))
     }
 
     function ComparePage() {
@@ -583,7 +581,7 @@ window.__ModuleLoader__.load({
               }, '填充')),
             h(ToolButton, {
               onClick: () => setShowPercent((value) => !value),
-              title: showPercent ? '隐藏分割线百分比' : '显示分割线百分比',
+              title: showPercent ? '隐藏分割线手柄和百分比' : '显示分割线手柄和百分比',
               icon: h(IconPercent, null),
               pressed: showPercent,
             }, '百分比'),
