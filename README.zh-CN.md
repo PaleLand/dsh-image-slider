@@ -1,6 +1,8 @@
-# DSH 图片对比
+# DSH 图片对比滑块
 
 给 **DeepSeek Harness** 的左侧栏加一个「图片对比」页面：加载两张图，重叠在一起，鼠标左右移动就能丝滑擦除对比。
+
+> 原名 `dsh-image-compare`，为避免与另一个社区插件重名而改名。
 
 ![效果示意](docs/demo.png)
 
@@ -22,7 +24,7 @@
 ### 从 GitHub 安装
 
 ```bash
-dsh plugin --profile 你的profile add github:PaleLand/dsh-image-compare
+dsh plugin --profile 你的profile add github:PaleLand/dsh-image-slider
 ```
 
 安装后重启 DeepSeek Harness，在左侧栏点击 **图片对比**。

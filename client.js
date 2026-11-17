@@ -1,5 +1,5 @@
 /**
- * Image Compare — a native DSH client plugin.
+ * Image Slider — a native DSH client plugin.
  *
  * Registers one global page in the left sidebar (`sidebar.panellist` + `main`)
  * that overlays two images and reveals them with a pointer-following split.
@@ -7,12 +7,12 @@
  * the DOM, so hover/drag stays smooth without a React render per frame.
  */
 window.__ModuleLoader__.load({
-  id: 'dsh-image-compare',
+  id: 'dsh-image-slider',
   factory(require) {
     const React = require('react')
     const h = React.createElement
-    const PANEL_ID = 'image-compare'
-    const STYLE_ID = 'dsh-image-compare-style'
+    const PANEL_ID = 'image-slider'
+    const STYLE_ID = 'dsh-image-slider-style'
 
     // The main panel unmounts on every switch to the conversation. Keep the
     // working set at module scope so coming back restores both images, the
@@ -477,7 +477,7 @@ window.__ModuleLoader__.load({
       const [right, setRight] = React.useState(pageMemory.right)
       const [fit, setFit] = React.useState(pageMemory.fit)
       const [showPercent, setShowPercent] = React.useState(() => {
-        try { return localStorage.getItem('dsh-image-compare:show-percent') === '1' } catch { return false }
+        try { return localStorage.getItem('dsh-image-slider:show-percent') === '1' } catch { return false }
       })
       const [resetNonce, setResetNonce] = React.useState(0)
 
@@ -486,7 +486,7 @@ window.__ModuleLoader__.load({
       }, [fit])
 
       React.useEffect(() => {
-        try { localStorage.setItem('dsh-image-compare:show-percent', showPercent ? '1' : '0') } catch {}
+        try { localStorage.setItem('dsh-image-slider:show-percent', showPercent ? '1' : '0') } catch {}
       }, [showPercent])
       const leftRef = React.useRef(pageMemory.left)
       const rightRef = React.useRef(pageMemory.right)
@@ -588,7 +588,7 @@ window.__ModuleLoader__.load({
       return h('div', { className: 'ic-page' },
         h('header', { className: 'ic-header' },
           h('div', { className: 'ic-heading' },
-            h('div', { className: 'ic-eyebrow' }, 'IMAGE COMPARE'),
+            h('div', { className: 'ic-eyebrow' }, 'IMAGE SLIDER'),
             h('h1', { className: 'ic-title' }, '图片对比'),
             h('p', { className: 'ic-sub' }, '把两张图叠在一起，鼠标在画面上左右移动，即可丝滑地揭示差异。也可以直接拖拽分割线。'))),
         h('div', { className: 'ic-toolbar ic-toolbar-row' },
@@ -692,7 +692,7 @@ window.__ModuleLoader__.load({
           return () => {
             if (!existing) style.remove()
           }
-        }, 'image-compare: styles')
+        }, 'image-slider: styles')
 
         ctx.effect(() => () => {
           for (const url of pageMemory.urls) {
@@ -701,7 +701,7 @@ window.__ModuleLoader__.load({
           pageMemory.urls.clear()
           pageMemory.left = null
           pageMemory.right = null
-        }, 'image-compare: image cache')
+        }, 'image-slider: image cache')
 
         ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({
           name: 'sidebar.panellist',

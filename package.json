@@ -1,22 +1,24 @@
 {
-  "name": "dsh-image-compare",
-  "version": "0.1.3",
+  "name": "dsh-image-slider",
+  "version": "0.2.0",
   "description": "DeepSeek Harness sidebar plugin for silky overlay image comparison.",
   "author": "PaleLand",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PaleLand/dsh-image-compare.git"
+    "url": "git+https://github.com/PaleLand/dsh-image-slider.git"
   },
-  "homepage": "https://github.com/PaleLand/dsh-image-compare#readme",
+  "homepage": "https://github.com/PaleLand/dsh-image-slider#readme",
   "bugs": {
-    "url": "https://github.com/PaleLand/dsh-image-compare/issues"
+    "url": "https://github.com/PaleLand/dsh-image-slider/issues"
   },
   "keywords": [
     "dsh",
     "dsh-plugin",
     "deepseek-harness",
     "image-compare",
+    "image-slider",
+    "wipe",
     "before-after",
     "slider"
   ],

@@ -1,8 +1,10 @@
-# DSH Image Compare
+# DSH Image Slider
 
 A left-sidebar image comparison panel for **DeepSeek Harness**. Load two images, overlay them, and move the pointer left/right to wipe between A and B with a smooth, eased reveal.
 
-![Image Compare demo](docs/demo.png)
+> Renamed from `dsh-image-compare` to avoid a package-name collision with another community plugin.
+
+![Image Slider demo](docs/demo.png)
 
 > 给 DeepSeek Harness 加一个「图片对比」侧栏页面：两张图重叠，鼠标左右移动即可丝滑擦除对比。
 
@@ -25,7 +27,7 @@ A left-sidebar image comparison panel for **DeepSeek Harness**. Load two images,
 ### From GitHub
 
 ```bash
-dsh plugin --profile your-profile add github:PaleLand/dsh-image-compare
+dsh plugin --profile your-profile add github:PaleLand/dsh-image-slider
 ```
 
 Then restart DeepSeek Harness and click **图片对比** in the left sidebar.
@@ -50,12 +52,12 @@ The package is a plain local bundle: no build step, no server, no extra runtime 
 | File | Purpose |
 | --- | --- |
 | `package.json` | Bundle manifest; declares `dsh.bundle.patch` and the Web client entry. |
-| `cordis.patch.yml` | Inserts the `image-compare` plugin row. |
+| `cordis.patch.yml` | Inserts the `image-slider` plugin row. |
 | `index.js` | Host half — intentionally empty. |
 | `client.js` | Browser half: slot registrations, the panel UI, pointer/keyboard handling, and styles. |
 | `icon.svg` | Sidebar icon. |
 
-The client registers `sidebar.panellist` with `id: image-compare` and the matching `main` panel key. The panel keeps two object URLs, draws both images in the same stage, and clips the top layer with `inset(0 0 0 P%)`. A small `requestAnimationFrame` loop eases the displayed position toward the pointer target.
+The client registers `sidebar.panellist` with `id: image-slider` and the matching `main` panel key. The panel keeps two object URLs, draws both images in the same stage, and clips the top layer with `inset(0 0 0 P%)`. A small `requestAnimationFrame` loop eases the displayed position toward the pointer target.
 
 ## Compatibility
 
