@@ -14,6 +14,29 @@ window.__ModuleLoader__.load({
     const PANEL_ID = 'image-compare'
     const STYLE_ID = 'dsh-image-compare-style'
 
+    // The main panel unmounts on every switch to the conversation. Keep the
+    // working set at module scope so coming back restores both images, the
+    // split position, and the view options instead of starting blank.
+    const pageMemory = {
+      left: null,
+      right: null,
+      fit: 'contain',
+      position: 0.5,
+      urls: new Set(),
+    }
+
+    function releaseUrl(url) {
+      if (!url || !pageMemory.urls.has(url)) return
+      pageMemory.urls.delete(url)
+      try { URL.revokeObjectURL(url) } catch {}
+    }
+
+    function urlStillInUse(url, ignoreSide) {
+      if (!url) return false
+      const other = ignoreSide === 'A' ? pageMemory.right : pageMemory.left
+      return Boolean(other && other.url === url)
+    }
+
     const CSS = String.raw`
 .ic-page {
   --ic-bg: var(--dsw-alias-bg-base, #ffffff);
@@ -313,18 +336,20 @@ window.__ModuleLoader__.load({
         h('small', null, '点击选择，或把图片拖进来')))
     }
 
-    function CompareStage({ left, right, fit, resetNonce, showPercent }) {
+    function CompareStage({ left, right, fit, resetNonce, showPercent, initialPosition, onPositionChange }) {
+      const start = typeof initialPosition === 'number' ? initialPosition : 0.5
       const stageRef = React.useRef(null)
       const topRef = React.useRef(null)
       const lineRef = React.useRef(null)
       const pctRef = React.useRef(null)
-      const targetRef = React.useRef(0.5)
-      const valueRef = React.useRef(0.5)
+      const targetRef = React.useRef(start)
+      const valueRef = React.useRef(start)
       const [dragging, setDragging] = React.useState(false)
 
       React.useEffect(() => {
         if (!resetNonce) return
         targetRef.current = 0.5
+        if (onPositionChange) onPositionChange(0.5)
       }, [resetNonce])
 
       React.useEffect(() => {
@@ -333,7 +358,7 @@ window.__ModuleLoader__.load({
 
       React.useEffect(() => {
         let frame = 0
-        let current = 0.5
+        let current = start
         let painted = -1
         const paint = (value) => {
           const pct = value * 100
@@ -343,8 +368,8 @@ window.__ModuleLoader__.load({
           if (pctRef.current) pctRef.current.textContent = Math.round(pct) + '%'
           if (stageRef.current) stageRef.current.setAttribute('aria-valuenow', String(Math.round(pct)))
         }
-        paint(0.5)
-        painted = 0.5
+        paint(start)
+        painted = start
         const tick = () => {
           const target = targetRef.current
           const delta = target - current
@@ -365,7 +390,9 @@ window.__ModuleLoader__.load({
         if (!stage) return
         const rect = stage.getBoundingClientRect()
         if (rect.width <= 0) return
-        targetRef.current = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+        const next = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+        targetRef.current = next
+        if (onPositionChange) onPositionChange(next)
       }
 
       const onPointerDown = (event) => {
@@ -394,7 +421,9 @@ window.__ModuleLoader__.load({
         else if (event.key === 'End') next = 1
         else return
         event.preventDefault()
-        targetRef.current = Math.max(0, Math.min(1, next))
+        const clamped = Math.max(0, Math.min(1, next))
+        targetRef.current = clamped
+        if (onPositionChange) onPositionChange(clamped)
       }
 
       return h('div', { className: 'ic-stage-wrap' },
@@ -414,7 +443,10 @@ window.__ModuleLoader__.load({
           onPointerCancel: endDrag,
           onLostPointerCapture: () => setDragging(false),
           onKeyDown,
-          onDoubleClick: () => { targetRef.current = 0.5 },
+          onDoubleClick: () => {
+            targetRef.current = 0.5
+            if (onPositionChange) onPositionChange(0.5)
+          },
         },
         h('img', {
           key: left.url,
@@ -441,36 +473,36 @@ window.__ModuleLoader__.load({
     }
 
     function ComparePage() {
-      const [left, setLeft] = React.useState(null)
-      const [right, setRight] = React.useState(null)
-      const [fit, setFit] = React.useState('contain')
+      const [left, setLeft] = React.useState(pageMemory.left)
+      const [right, setRight] = React.useState(pageMemory.right)
+      const [fit, setFit] = React.useState(pageMemory.fit)
       const [showPercent, setShowPercent] = React.useState(() => {
         try { return localStorage.getItem('dsh-image-compare:show-percent') === '1' } catch { return false }
       })
       const [resetNonce, setResetNonce] = React.useState(0)
 
       React.useEffect(() => {
+        pageMemory.fit = fit
+      }, [fit])
+
+      React.useEffect(() => {
         try { localStorage.setItem('dsh-image-compare:show-percent', showPercent ? '1' : '0') } catch {}
       }, [showPercent])
-      const leftRef = React.useRef(null)
-      const rightRef = React.useRef(null)
-      const urlsRef = React.useRef(new Set())
+      const leftRef = React.useRef(pageMemory.left)
+      const rightRef = React.useRef(pageMemory.right)
       const leftInput = React.useRef(null)
       const rightInput = React.useRef(null)
 
-      React.useEffect(() => () => {
-        for (const url of urlsRef.current) {
-          try { URL.revokeObjectURL(url) } catch {}
-        }
-        urlsRef.current.clear()
-      }, [])
-
       const applyImage = React.useCallback((side, item) => {
+        const previous = side === 'A' ? pageMemory.left : pageMemory.right
+        if (previous && previous.url !== item.url && !urlStillInUse(previous.url, side)) releaseUrl(previous.url)
         if (side === 'A') {
           leftRef.current = item
+          pageMemory.left = item
           setLeft(item)
         } else {
           rightRef.current = item
+          pageMemory.right = item
           setRight(item)
         }
         setResetNonce((value) => value + 1)
@@ -479,9 +511,13 @@ window.__ModuleLoader__.load({
       const loadFile = React.useCallback((side, file) => {
         if (!file || typeof file.type !== 'string' || !file.type.startsWith('image/')) return
         const url = URL.createObjectURL(file)
-        urlsRef.current.add(url)
+        pageMemory.urls.add(url)
         applyImage(side, { url, name: file.name || ('图片 ' + side), size: file.size || 0 })
       }, [applyImage])
+
+      const rememberPosition = React.useCallback((value) => {
+        pageMemory.position = value
+      }, [])
 
       const pick = (side) => {
         const input = side === 'A' ? leftInput.current : rightInput.current
@@ -489,11 +525,15 @@ window.__ModuleLoader__.load({
       }
 
       const clear = (side) => {
+        const previous = side === 'A' ? pageMemory.left : pageMemory.right
+        if (previous && !urlStillInUse(previous.url, side)) releaseUrl(previous.url)
         if (side === 'A') {
           leftRef.current = null
+          pageMemory.left = null
           setLeft(null)
         } else {
           rightRef.current = null
+          pageMemory.right = null
           setRight(null)
         }
       }
@@ -504,6 +544,8 @@ window.__ModuleLoader__.load({
         const nextRight = leftRef.current
         leftRef.current = nextLeft
         rightRef.current = nextRight
+        pageMemory.left = nextLeft
+        pageMemory.right = nextRight
         setLeft(nextLeft)
         setRight(nextRight)
         setResetNonce((value) => value + 1)
@@ -592,7 +634,11 @@ window.__ModuleLoader__.load({
               icon: h(IconReset, null),
             })),
         both
-          ? h(CompareStage, { left, right, fit, resetNonce, showPercent })
+          ? h(CompareStage, {
+              left, right, fit, resetNonce, showPercent,
+              initialPosition: pageMemory.position,
+              onPositionChange: rememberPosition,
+            })
           : h('div', { className: 'ic-empty' },
             h('div', { className: 'ic-empty-intro' },
               h('h2', null, both ? '' : '选择两张图片，开始对比'),
@@ -647,6 +693,15 @@ window.__ModuleLoader__.load({
             if (!existing) style.remove()
           }
         }, 'image-compare: styles')
+
+        ctx.effect(() => () => {
+          for (const url of pageMemory.urls) {
+            try { URL.revokeObjectURL(url) } catch {}
+          }
+          pageMemory.urls.clear()
+          pageMemory.left = null
+          pageMemory.right = null
+        }, 'image-compare: image cache')
 
         ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({
           name: 'sidebar.panellist',

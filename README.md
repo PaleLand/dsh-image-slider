@@ -17,6 +17,7 @@ A left-sidebar image comparison panel for **DeepSeek Harness**. Load two images,
 - **Fit or fill** — toggle between `contain` and `cover` without reloading either image.
 - **Swap and reset** — exchange A/B or restore the default view from the toolbar.
 - **Theme aware** — uses DSH theme tokens (`--dsw-alias-*`) and a neutral checkerboard stage.
+- **Remembers the last comparison** — switch to the conversation and back; both images and the split position are still there.
 - **Local only** — images are read from the file picker or clipboard into object URLs. Nothing is uploaded or sent to a model.
 
 ## Install
