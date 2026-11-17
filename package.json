@@ -1,0 +1,56 @@
+{
+  "name": "dsh-image-compare",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness sidebar plugin for silky overlay image comparison.",
+  "author": "PaleLand",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaleLand/dsh-image-compare.git"
+  },
+  "homepage": "https://github.com/PaleLand/dsh-image-compare#readme",
+  "bugs": {
+    "url": "https://github.com/PaleLand/dsh-image-compare/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "image-compare",
+    "before-after",
+    "slider"
+  ],
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE",
+    "docs"
+  ],
+  "icon": "./icon.svg",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": []
+    }
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0"
+  }
+}
